@@ -4,32 +4,28 @@ const sharp = require('sharp')
 const User = require('../models/user')
 const auth = require('../middleware/auth')
 const router = new express.Router()
+const path = require('path')
 
 
-router.post('/users', async (req,res) => {
+router.post('/users', async (req, res) => {
     const user = new User(req.body)
-
+ 
     try {
         await user.save()
         const token = await user.generateAuthToken()
-        res.status(201).send({user, token})
-        
+        res.cookie('auth_token', token)
+        res.sendFile(path.resolve(__dirname, '..', 'views', 'private.html'))
     } catch (e) {
         res.status(400).send(e)
     }
-
-    // user.save().then(() => {
-    //     res.status(201).send(user)
-    // }).catch((e) => {
-    //     res.status(400).send(e)
-    // })
 })
 
 router.post('/users/login', async (req, res) => {
     try {
         const user = await User.findByCredentials(req.body.email, req.body.password)
         const token = await user.generateAuthToken()
-        res.send({user, token})
+        res.cookie('auth_token', token)
+        res.sendFile(path.resolve(__dirname, '..', 'views', 'private.html'))
     } catch (e) {
         res.status(400).send()
     }
